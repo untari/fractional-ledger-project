@@ -1,15 +1,54 @@
 /**
- * The root component of the web app.
+ * The root component.
  *
- * Deliberately empty for now — the dashboard (asset card, shareholder table,
- * revenue form) is built up one component per commit in later steps.
+ * When the page opens it loads the aircraft dashboard from the API, holds it in
+ * state, and renders the asset card + shareholder table. The revenue form
+ * (which mutates this state) is added in the next step.
  */
 
+import { useEffect, useState } from 'react'
+
+import { getAircraft } from './api.js'
+import AssetCard from './components/AssetCard.jsx'
+import ShareholderTable from './components/ShareholderTable.jsx'
+
+// The prototype manages a single aircraft. Its id in the seeded database is 1.
+const AIRCRAFT_ID = 1
+
 function App() {
+  // `summary` is the API payload: { aircraft, shareholders, totals }.
+  // It's null until the fetch finishes.
+  const [summary, setSummary] = useState(null)
+  const [error, setError] = useState(null)
+
+  // The empty dependency array [] means "run this once, after the first render".
+  useEffect(() => {
+    getAircraft(AIRCRAFT_ID)
+      .then(setSummary)
+      .catch((err) => setError(err.message))
+  }, [])
+
+  if (error) {
+    return (
+      <main>
+        <p className="error">Could not load the dashboard: {error}</p>
+      </main>
+    )
+  }
+
+  if (!summary) {
+    return (
+      <main>
+        <p>Loading…</p>
+      </main>
+    )
+  }
+
   return (
     <main>
       <h1>Fractional Share &amp; Dividend Ledger</h1>
-      <p>Frontend scaffold. UI coming in the next steps.</p>
+      <AssetCard aircraft={summary.aircraft} totals={summary.totals} />
+      <ShareholderTable shareholders={summary.shareholders} />
     </main>
   )
 }
