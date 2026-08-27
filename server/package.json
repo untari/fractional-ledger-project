@@ -1,0 +1,26 @@
+{
+  "name": "fractional-ledger-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "API + SQLite database for the Fractional Share & Dividend Ledger.",
+  "//": "`type: module` lets us use modern `import` syntax instead of `require`.",
+  "scripts": {
+    "//dev": "Run the server and restart it automatically when a source file changes.",
+    "dev": "node --watch src/index.js",
+
+    "//start": "Run the server once, for production / deployment.",
+    "start": "node src/index.js",
+
+    "//seed": "Create the database and load the demo aircraft + investors (added in a later step).",
+    "seed": "node src/seed.js",
+
+    "//test": "Run unit tests using Node's built-in test runner (no extra dependency).",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  }
+}

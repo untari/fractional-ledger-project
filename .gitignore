@@ -1,0 +1,20 @@
+# Dependencies — restored by `npm install`, never committed
+node_modules/
+
+# The SQLite database file and its temporary sidecar files.
+# The schema lives in server/src/schema.sql; the data is local state.
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Production build output (generated from source by `npm run build`)
+dist/
+
+# Local environment overrides (secrets, machine-specific config)
+.env
+.env.local
+
+# OS / editor cruft
+.DS_Store
+*.log

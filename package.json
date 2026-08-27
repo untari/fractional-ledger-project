@@ -1,0 +1,25 @@
+{
+  "name": "fractional-ledger",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Prototype Fractional Share & Dividend Ledger — tracks fractional aircraft ownership and distributes charter revenue proportionally to investors.",
+  "//": "This root package.json owns NO application code. Its only job is to install the shared dev tool (concurrently) and provide one command that boots the server and the web app together. Each real part of the app has its own package.json: ./server and ./web.",
+  "scripts": {
+    "//dev": "Run the API (server) and the UI (web) at the same time, each labelled and colour-coded in the terminal.",
+    "dev": "concurrently -n server,web -c blue,green \"npm:dev:server\" \"npm:dev:web\"",
+    "dev:server": "npm --prefix server run dev",
+    "dev:web": "npm --prefix web run dev",
+
+    "//setup": "One-time install of dependencies for every part of the project.",
+    "setup": "npm install && npm --prefix server install && npm --prefix web install",
+
+    "//seed": "Wipe and repopulate the database with the demo aircraft and its investors.",
+    "seed": "npm --prefix server run seed",
+
+    "//test": "Run the backend unit tests (the money math).",
+    "test": "npm --prefix server test"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
