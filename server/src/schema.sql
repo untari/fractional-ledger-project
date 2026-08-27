@@ -16,7 +16,7 @@
 --  aircraft — one physical asset. The prototype displays one; schema allows many.
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS aircraft (
-  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  id            INTEGER PRIMARY KEY,
   tail_number   TEXT    NOT NULL UNIQUE,   -- registration, e.g. "N123JC"
   model         TEXT    NOT NULL,          -- e.g. "Bombardier Global 7500"
   manufacturer  TEXT    NOT NULL,          -- e.g. "Bombardier"
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS aircraft (
 --  investor — a person or entity that can hold shares in an aircraft.
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS investor (
-  id   INTEGER PRIMARY KEY AUTOINCREMENT,
+  id   INTEGER PRIMARY KEY,
   name TEXT    NOT NULL
 );
 
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS investor (
 --  UNIQUE stops the same investor being recorded twice for one aircraft.
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS holding (
-  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  id           INTEGER PRIMARY KEY,
   aircraft_id  INTEGER NOT NULL REFERENCES aircraft(id),
   investor_id  INTEGER NOT NULL REFERENCES investor(id),
   basis_points INTEGER NOT NULL CHECK (basis_points > 0 AND basis_points <= 10000),
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS holding (
 --  created_at: ISO-ish timestamp, filled in by the database.
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS revenue_event (
-  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  id           INTEGER PRIMARY KEY,
   aircraft_id  INTEGER NOT NULL REFERENCES aircraft(id),
   amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),
   memo         TEXT,
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS revenue_event (
 --  correct and explainable.
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS payout (
-  id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+  id                   INTEGER PRIMARY KEY,
   revenue_event_id     INTEGER NOT NULL REFERENCES revenue_event(id),
   investor_id          INTEGER NOT NULL REFERENCES investor(id),
   amount_cents         INTEGER NOT NULL CHECK (amount_cents >= 0),

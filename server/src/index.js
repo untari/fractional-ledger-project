@@ -9,6 +9,8 @@
 import express from 'express';
 import cors from 'cors';
 
+import { getAircraftSummary } from './aircraft.js';
+
 // The port the API listens on.
 // 3001 keeps it clear of Vite's dev server, which uses 5173 for the web app.
 // `process.env.PORT` lets a hosting provider override this in production.
@@ -39,6 +41,28 @@ app.use(express.json());
  */
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'fractional-ledger-api' });
+});
+
+/**
+ * GET /api/aircraft/:id
+ * The dashboard payload for one aircraft: the asset, its shareholders (with
+ * ownership % and accumulated payout), and revenue totals.
+ * Try it:  curl http://localhost:3001/api/aircraft/1
+ */
+app.get('/api/aircraft/:id', (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res
+      .status(400)
+      .json({ error: 'aircraft id must be a positive integer' });
+  }
+
+  const summary = getAircraftSummary(id);
+  if (!summary) {
+    return res.status(404).json({ error: `no aircraft with id ${id}` });
+  }
+
+  res.json(summary);
 });
 
 /* ------------------------------------------------------------------ *
