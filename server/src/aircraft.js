@@ -62,6 +62,30 @@ const revenueTotalsStmt = db.prepare(`
   WHERE aircraft_id = ?
 `);
 
+// every aircraft with a one-line summary — used to populate the picker
+const listStmt = db.prepare(`
+  SELECT
+    a.id,
+    a.tail_number AS tailNumber,
+    a.model,
+    a.manufacturer,
+    -- total revenue ever logged for this aircraft (0 if none)
+    COALESCE(SUM(re.amount_cents), 0) AS revenueLoggedCents
+  FROM aircraft a
+  LEFT JOIN revenue_event re ON re.aircraft_id = a.id
+  GROUP BY a.id
+  ORDER BY a.tail_number
+`);
+
+/**
+ * List every aircraft, ordered by tail number.
+ *
+ * @returns {Array<{id, tailNumber, model, manufacturer, revenueLoggedCents}>}
+ */
+export function listAircraft() {
+  return listStmt.all();
+}
+
 /**
  * Build the full dashboard payload for one aircraft.
  *

@@ -12,8 +12,8 @@ import express from 'express';
 // middleware that adds the headers browsers need for cross-origin calls
 import cors from 'cors';
 
-// read path (dashboard payload)
-import { getAircraftSummary } from './aircraft.js';
+// read path (fleet list + dashboard payload)
+import { getAircraftSummary, listAircraft } from './aircraft.js';
 // write path (log + distribute revenue)
 import { recordRevenue } from './revenue.js';
 
@@ -50,6 +50,15 @@ app.use(express.json());
 app.get('/api/health', (req, res) => {
   // send back a small JSON object
   res.json({ status: 'ok', service: 'fractional-ledger-api' });
+});
+
+/**
+ * GET /api/aircraft
+ * Every aircraft with a short summary. Used to populate the aircraft picker.
+ * Try it:  curl http://localhost:3001/api/aircraft
+ */
+app.get('/api/aircraft', (req, res) => {
+  res.json({ aircraft: listAircraft() });
 });
 
 /**
