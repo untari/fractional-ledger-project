@@ -2,9 +2,15 @@
  * The API server.
  *
  * Routes:
- *   GET  /api/health                  liveness check
- *   GET  /api/aircraft/:id            dashboard payload for one aircraft
- *   POST /api/aircraft/:id/revenue    log revenue and distribute it
+ *   Challenge 1 — Fractional Share & Dividend Ledger
+ *     GET  /api/health                  liveness check
+ *     GET  /api/aircraft                 fleet list (picker)
+ *     GET  /api/aircraft/:id             dashboard payload for one aircraft
+ *     POST /api/aircraft/:id/revenue     log revenue and distribute it
+ *   Challenge 2 — Fleet Lease Tracker
+ *     GET   /api/fleet                   aircraft + active lease + status
+ *     GET   /api/airlines                lessee airlines (dropdown)
+ *     PATCH /api/aircraft/:id/lease      assign / reassign / end a lease
  */
 
 // the web framework (routing + middleware)
@@ -12,10 +18,12 @@ import express from 'express';
 // middleware that adds the headers browsers need for cross-origin calls
 import cors from 'cors';
 
-// read path (fleet list + dashboard payload)
+// Challenge 1: read path (fleet list + dashboard payload) and write path
 import { getAircraftSummary, listAircraft } from './aircraft.js';
-// write path (log + distribute revenue)
 import { recordRevenue } from './revenue.js';
+// Challenge 2: fleet lease tracker
+import { listFleet, listAirlines } from './fleet.js';
+import { assignLease, endLease } from './lease.js';
 
 // The port the API listens on.
 // 3001 keeps it clear of Vite's dev server, which uses 5173 for the web app.
@@ -151,6 +159,70 @@ app.post('/api/aircraft/:id/revenue', (req, res) => {
 });
 
 /* ------------------------------------------------------------------ *
+ * Challenge 2 — Fleet Lease Tracker
+ * ------------------------------------------------------------------ */
+
+/**
+ * GET /api/fleet
+ * Every aircraft, its active lease (lessee + dates), and the lease status
+ * (ok / expiring-soon / expired) computed on the server.
+ */
+app.get('/api/fleet', (req, res) => {
+  res.json({ fleet: listFleet() });
+});
+
+/**
+ * GET /api/airlines
+ * The list of lessee airlines — used to populate the reassign dropdown.
+ */
+app.get('/api/airlines', (req, res) => {
+  res.json({ airlines: listAirlines() });
+});
+
+/**
+ * PATCH /api/aircraft/:id/lease
+ * Body, one of:
+ *   { "airlineId": 2, "startDate": "2026-09-01", "endDate": "2027-03-01" }
+ *       -> assign or reassign (ends any current active lease, opens a new one)
+ *   { "status": "ended" }
+ *       -> return the aircraft (end its active lease, no replacement)
+ *
+ * Responds with the refreshed fleet list.
+ */
+app.patch('/api/aircraft/:id/lease', (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res
+      .status(400)
+      .json({ error: 'aircraft id must be a positive integer' });
+  }
+  if (!getAircraftSummary(id)) {
+    return res.status(404).json({ error: `no aircraft with id ${id}` });
+  }
+
+  const body = req.body ?? {};
+
+  // { status: 'ended' } — return the aircraft
+  if (body.status === 'ended') {
+    endLease(id);
+    return res.json({ fleet: listFleet() });
+  }
+
+  // otherwise assign / reassign
+  const { airlineId, startDate, endDate } = body;
+  const isIsoDate = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
+  if (!Number.isInteger(airlineId) || !isIsoDate(startDate) || !isIsoDate(endDate)) {
+    return res.status(400).json({
+      error:
+        'expected { airlineId:int, startDate:"YYYY-MM-DD", endDate:"YYYY-MM-DD" } or { status:"ended" }',
+    });
+  }
+
+  assignLease(id, { airlineId, startDate, endDate });
+  res.json({ fleet: listFleet() });
+});
+
+/* ------------------------------------------------------------------ *
  * Error handling
  * ------------------------------------------------------------------ */
 
@@ -164,9 +236,12 @@ app.use((req, res) => {
 // would return an HTML error page; we want JSON.
 // eslint-disable-next-line no-unused-vars -- Express needs the 4-arg signature
 app.use((err, req, res, next) => {
-  // the tagged error from revenue.js -> 409 = Conflict (aircraft has no owners)
-  if (err.code === 'NO_HOLDINGS') {
-    return res.status(409).json({ error: err.message });
+  // tagged errors from the domain modules -> friendly status codes
+  if (err.code === 'NO_HOLDINGS' || err.code === 'NO_LEASE') {
+    return res.status(409).json({ error: err.message }); // Conflict
+  }
+  if (err.code === 'BAD_AIRLINE' || err.code === 'BAD_DATES') {
+    return res.status(400).json({ error: err.message }); // Bad Request
   }
   // log anything unexpected for the developer
   console.error(err);

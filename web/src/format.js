@@ -23,6 +23,17 @@ export function formatBasisPoints(basisPoints) {
   return `${basisPoints / 100}%`;
 }
 
+/** "2026-09-18"  ->  "18 Sep 2026"  (parsed as a plain calendar date, no TZ) */
+export function formatDate(isoDate) {
+  const [y, m, d] = isoDate.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
 /**
  * Parse a typed dollar amount into whole cents.
  *   "50,000"    -> 5000000

@@ -120,3 +120,46 @@ CREATE INDEX IF NOT EXISTS idx_revenue_aircraft ON revenue_event(aircraft_id);
 CREATE INDEX IF NOT EXISTS idx_payout_investor  ON payout(investor_id);
 -- speeds up "all payouts from revenue event N"
 CREATE INDEX IF NOT EXISTS idx_payout_revenue   ON payout(revenue_event_id);
+
+
+-- ============================================================================
+--  Challenge 2 — Fleet Lease Tracker
+-- ============================================================================
+--  Which aircraft are leased out, to which airline, and until when. Dates are
+--  stored as ISO text ('YYYY-MM-DD') so they sort and compare correctly.
+-- ============================================================================
+
+
+-- ----------------------------------------------------------------------------
+--  airline — a lessee client. The Aircraft <-> Airline link lives in `lease`.
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS airline (
+  id      INTEGER PRIMARY KEY,
+  name    TEXT NOT NULL UNIQUE,   -- e.g. "Cathay Pacific"
+  country TEXT                    -- optional, e.g. "Hong Kong"
+);
+
+
+-- ----------------------------------------------------------------------------
+--  lease — one leasing agreement: an aircraft, a lessee airline, a date range.
+--
+--  Modelled as its own table (not columns on `aircraft`) so an aircraft keeps a
+--  lease HISTORY and can be re-leased. The application enforces "at most one
+--  active lease per aircraft".
+--
+--  status: 'active' while the aircraft is out with this lessee, 'ended' once
+--  it has been returned or the lease superseded.
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS lease (
+  id          INTEGER PRIMARY KEY,
+  aircraft_id INTEGER NOT NULL REFERENCES aircraft(id),
+  airline_id  INTEGER NOT NULL REFERENCES airline(id),
+  start_date  TEXT    NOT NULL,                 -- 'YYYY-MM-DD'
+  end_date    TEXT    NOT NULL,                 -- 'YYYY-MM-DD'
+  status      TEXT    NOT NULL DEFAULT 'active'
+              CHECK (status IN ('active', 'ended')),
+  CHECK (end_date >= start_date)
+);
+
+-- speeds up "the active lease for aircraft N"
+CREATE INDEX IF NOT EXISTS idx_lease_aircraft ON lease(aircraft_id);

@@ -53,3 +53,34 @@ export function logRevenue(id, amountCents, memo) {
     body: JSON.stringify({ amountCents, memo }),
   });
 }
+
+/* --- Challenge 2: Fleet Lease Tracker ------------------------------- */
+
+/** Fetch the fleet: each aircraft + its active lease + computed status. */
+export function getFleet() {
+  return request('/fleet');
+}
+
+/** Fetch the lessee airlines (for the reassign dropdown). */
+export function getAirlines() {
+  return request('/airlines');
+}
+
+/**
+ * Assign or reassign an aircraft's lease. Returns { fleet } (the fresh list).
+ * `lease` is { airlineId, startDate, endDate } — dates as 'YYYY-MM-DD'.
+ */
+export function assignLease(id, lease) {
+  return request(`/aircraft/${id}/lease`, {
+    method: 'PATCH',
+    body: JSON.stringify(lease),
+  });
+}
+
+/** End an aircraft's active lease (mark it available). Returns { fleet }. */
+export function endLease(id) {
+  return request(`/aircraft/${id}/lease`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status: 'ended' }),
+  });
+}

@@ -424,3 +424,218 @@ main {
   color: var(--text-dim);
   font-size: 0.95rem;
 }
+
+/* --- challenge switcher --------------------------------------------- */
+.switcher {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(0, 10, 20, 0.4);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.switch-btn {
+  padding: 0.5rem 1.1rem;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: none;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.switch-btn:hover {
+  color: var(--text);
+}
+
+.switch-btn.is-active {
+  color: var(--navy-deep);
+  background: linear-gradient(180deg, var(--gold), var(--gold-dim));
+}
+
+/* --- fleet table --------------------------------------------------- */
+.fleet {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.fleet th {
+  padding: 0.5rem 0.5rem;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.fleet td {
+  padding: 0.7rem 0.5rem;
+  border-bottom: 1px solid rgba(50, 71, 93, 0.4);
+  vertical-align: middle;
+}
+
+.fleet tbody tr:hover td {
+  background: rgba(216, 169, 49, 0.05);
+}
+
+.fleet .mono {
+  font-family: "Liberation Mono", ui-monospace, monospace;
+  font-weight: 600;
+}
+
+.fleet .muted {
+  color: var(--text-dim);
+}
+
+.fleet-actions {
+  text-align: right;
+}
+
+.link-btn {
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--gold);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.2rem 0.3rem;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
+}
+
+/* --- lease status badges ------------------------------------------- */
+.badge {
+  display: inline-block;
+  padding: 0.18rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.badge-ok {
+  color: #a7f3d0;
+  background: rgba(74, 222, 128, 0.12);
+  border: 1px solid rgba(74, 222, 128, 0.35);
+}
+
+.badge-expiring-soon,
+.badge-expired {
+  color: #fecaca;
+  background: rgba(248, 113, 113, 0.14);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+}
+
+.badge-available {
+  color: var(--text-dim);
+  background: rgba(133, 153, 173, 0.12);
+  border: 1px solid var(--border);
+}
+
+/* --- inline lease editor ----------------------------------------- */
+.fleet-editor-row td {
+  background: rgba(0, 10, 20, 0.35);
+}
+
+.fleet-editor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.9rem;
+  padding: 0.4rem 0;
+}
+
+.fleet-editor label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+}
+
+.fleet-editor select,
+.fleet-editor input {
+  padding: 0.45rem 0.6rem;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--text);
+  background: rgba(0, 10, 20, 0.5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color-scheme: dark;
+}
+
+.fleet-editor select:focus,
+.fleet-editor input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.fleet-editor select option {
+  color: #fafafa;
+  background: #082645;
+}
+
+.fleet-editor-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-primary {
+  padding: 0.5rem 1.1rem;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--navy-deep);
+  background: linear-gradient(180deg, var(--gold), var(--gold-dim));
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.btn-ghost {
+  padding: 0.5rem 1.1rem;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.btn-ghost:hover {
+  color: var(--text);
+  border-color: var(--text-dim);
+}
+
+.btn-primary:disabled,
+.btn-ghost:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+@media (max-width: 620px) {
+  .fleet thead { display: none; }
+  .fleet,
+  .fleet tbody,
+  .fleet tr,
+  .fleet td { display: block; width: 100%; }
+  .fleet tr { border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 0.6rem; padding: 0.3rem 0.5rem; }
+  .fleet td { border: none; padding: 0.3rem 0; }
+  .fleet-actions { text-align: left; }
+}
