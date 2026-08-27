@@ -51,26 +51,60 @@ main {
   gap: 1.25rem;
 }
 
-/* --- page header ------------------------------------------------------ */
-.page-header {
+/* --- brand header --------------------------------------------------- */
+.brand {
   margin-bottom: 0.5rem;
 }
 
-.page-header h1 {
-  font-size: 1.7rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  margin: 0;
+.brand-lockup {
+  display: flex;
+  align-items: center;
 }
 
-.page-header h1 .accent {
-  color: var(--gold);
+.brand-words {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
 }
 
-.page-header p {
-  margin: 0.35rem 0 0;
+.brand-name {
+  font-family: Cinzel, "Times New Roman", Georgia, serif;
+  font-weight: 600;
+  font-size: 1.4rem;
+  letter-spacing: 0.14em;
+  color: var(--text);
+}
+
+.brand-tagline {
+  margin-top: 3px;
+  font-size: 0.58rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
   color: var(--text-dim);
-  font-size: 0.9rem;
+}
+
+.brand-sub {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin: 1rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.brand-badge {
+  padding: 0.2rem 0.6rem;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  background: var(--gold-soft);
+  border: 1px solid rgba(216, 169, 49, 0.35);
+  border-radius: 999px;
 }
 
 /* --- card: the wrapper around each dashboard section ----------------- */

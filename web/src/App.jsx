@@ -55,11 +55,16 @@ function App() {
 
   return (
     <main>
-      <header className="page-header">
-        <h1>
-          Fractional Share &amp; <span className="accent">Dividend Ledger</span>
-        </h1>
-        <p>Charter revenue, distributed to fractional owners by stake.</p>
+      {/* Brand header. Wordmark set in Cinzel (from Google Fonts).
+          This is a technical-assessment prototype, not an official product. */}
+      <header className="brand">
+        <div className="brand-lockup">
+          <span className="brand-words">
+            <span className="brand-name">JET CENTRUM</span>
+            <span className="brand-tagline">A High Altitude Business</span>
+          </span>
+        </div>
+        <p className="brand-sub">Fractional Share &amp; Dividend Ledger</p>
       </header>
 
       {/* only worth showing the picker when there's more than one choice */}
