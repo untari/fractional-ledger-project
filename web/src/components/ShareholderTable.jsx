@@ -3,8 +3,10 @@
  * been paid so far across every logged flight.
  */
 
+// "$..." and "..%" formatters
 import { formatCents, formatBasisPoints } from '../format.js';
 
+// `shareholders` is the array from summary.shareholders
 function ShareholderTable({ shareholders }) {
   return (
     <section className="card">
@@ -18,10 +20,14 @@ function ShareholderTable({ shareholders }) {
           </tr>
         </thead>
         <tbody>
+          {/* one <tr> per shareholder */}
           {shareholders.map((s) => (
+            // key: stable id so React can track rows efficiently across re-renders
             <tr key={s.investorId}>
               <td>{s.name}</td>
+              {/* 3750 -> "37.5%" */}
               <td className="num">{formatBasisPoints(s.basisPoints)}</td>
+              {/* cents -> "$..." */}
               <td className="num">{formatCents(s.totalPaidCents)}</td>
             </tr>
           ))}

@@ -8,6 +8,7 @@
  * against data you want to keep.
  */
 
+// opening this also creates the file and applies the schema
 import db from './db.js';
 
 // ---------------------------------------------------------------------------
@@ -34,7 +35,9 @@ const INVESTORS = [
 // ---------------------------------------------------------------------------
 //  Safety check — never seed stakes that exceed 100%
 // ---------------------------------------------------------------------------
+// 5000 + 3750 + 1250 = 10000
 const totalBasisPoints = INVESTORS.reduce((sum, i) => sum + i.basis_points, 0);
+// refuse to write demo data that's already invalid
 if (totalBasisPoints > 10000) {
   throw new Error(
     `Ownership stakes add up to ${totalBasisPoints} basis points — over 100%.`,
@@ -62,6 +65,7 @@ const runSeed = db.transaction(() => {
 
   // 2. Insert the aircraft. .run() executes the statement; .lastInsertRowid is
   //    the id the database just auto-assigned to the new row.
+  // @name in the SQL matches the keys of the AIRCRAFT object
   const aircraftId = db
     .prepare(
       `INSERT INTO aircraft (tail_number, model, manufacturer, serial_number)
@@ -79,11 +83,14 @@ const runSeed = db.transaction(() => {
   );
 
   for (const investor of INVESTORS) {
+    // create the investor row and grab its new id
     const investorId = insertInvestor.run(investor.name).lastInsertRowid;
+    // link them to the aircraft with their stake
     insertHolding.run(aircraftId, investorId, investor.basis_points);
   }
 });
 
+// actually execute the transaction defined above
 runSeed();
 
 console.log(

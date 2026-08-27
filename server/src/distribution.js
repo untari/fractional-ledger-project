@@ -19,6 +19,7 @@
 
 // 10,000 basis points = 100.00%. Ownership is stored in basis points so the
 // math stays on whole integers (5000 = 50%, 1250 = 12.5%).
+// the divisor used everywhere below; named so the intent is clear
 const FULL_OWNERSHIP_BP = 10_000;
 
 /**
@@ -38,11 +39,14 @@ const FULL_OWNERSHIP_BP = 10_000;
  */
 export function distributeRevenue(revenueCents, holdings) {
   // ---- validate input ----------------------------------------------------
+  // reject decimals and negatives — money must arrive as whole, non-negative cents
   if (!Number.isInteger(revenueCents) || revenueCents < 0) {
     throw new Error('revenueCents must be a non-negative integer');
   }
 
+  // add every stake together (e.g. 5000 + 3750 + 1250 = 10000)
   const totalBasisPoints = holdings.reduce((sum, h) => sum + h.basisPoints, 0);
+  // more than 100% owned is impossible — refuse to calculate
   if (totalBasisPoints > FULL_OWNERSHIP_BP) {
     throw new Error(
       `ownership stakes total ${totalBasisPoints} basis points, over 100%`,
@@ -56,44 +60,64 @@ export function distributeRevenue(revenueCents, holdings) {
   //                  (numerator % 10000) so we never touch a float. Used only
   //                  to rank who is most "owed" a leftover cent.
   const rows = holdings.map((h) => {
-    const numerator = revenueCents * h.basisPoints; // integer
+    // integer: revenue scaled by this stake, not yet divided
+    const numerator = revenueCents * h.basisPoints;
     return {
+      // carry the investor id through unchanged
       investorId: h.investorId,
+      // carry the stake through unchanged
       basisPoints: h.basisPoints,
+      // whole-cent share, always rounded DOWN
       amountCents: Math.floor(numerator / FULL_OWNERSHIP_BP),
+      // the dropped fraction, kept as an integer 0..9999
       remainder: numerator % FULL_OWNERSHIP_BP,
     };
   });
 
   // ---- step 2: how many cents should reach investors in total ---------
+  // total that SHOULD be paid out (at 100% ownership this is all of it)
   const targetCents = Math.floor(
     (revenueCents * totalBasisPoints) / FULL_OWNERSHIP_BP,
   );
+  // sum of the rounded-down shares from step 1
   const wholeCentsPaid = rows.reduce((sum, r) => sum + r.amountCents, 0);
-  const leftover = targetCents - wholeCentsPaid; // always 0 .. rows.length-1
+  // the few cents lost to rounding down; always 0 .. rows.length-1
+  const leftover = targetCents - wholeCentsPaid;
 
   // ---- step 3: distribute the leftover cents, largest remainder first --
   // Tie-breakers (bigger stake, then lower id) make the output deterministic:
   // the same inputs always produce the exact same allocation.
   const ranked = [...rows].sort(
     (a, b) =>
+      // biggest dropped fraction first (most "owed" a cent)
       b.remainder - a.remainder ||
+      // tie -> larger stake wins
       b.basisPoints - a.basisPoints ||
+      // still tied -> lower investor id wins
       a.investorId - b.investorId,
   );
+  // give one extra cent to each of the top `leftover` investors
   for (let i = 0; i < leftover; i += 1) {
     ranked[i].amountCents += 1;
   }
 
   // ---- result --------------------------------------------------------
+  // total actually handed out (after the +1s above)
   const distributedCents = rows.reduce((sum, r) => sum + r.amountCents, 0);
   return {
+    // echo the input back
     revenueCents,
+    // what reached investors
     distributedCents,
+    // the rest (matches any ownership below 100%)
     retainedCents: revenueCents - distributedCents,
+    // drop `remainder` here — it was only needed for ranking
     allocations: rows.map(({ investorId, basisPoints, amountCents }) => ({
+      // who
       investorId,
+      // their stake
       basisPoints,
+      // their cents from this revenue
       amountCents,
     })),
   };

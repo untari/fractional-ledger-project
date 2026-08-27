@@ -14,40 +14,57 @@ import { logRevenue } from '../api.js'
 import { dollarsToCents, formatCents } from '../format.js'
 
 function RevenueForm({ aircraftId, onLogged }) {
+  // the text in the "Amount" input
   const [amount, setAmount] = useState('')
+  // the text in the "Note" input
   const [memo, setMemo] = useState('')
+  // true while the request is in flight (used to disable the form)
   const [submitting, setSubmitting] = useState(false)
+  // validation or server error message, or null
   const [error, setError] = useState(null)
+  // success message shown after a log, or null
   const [confirmation, setConfirmation] = useState(null)
 
   async function handleSubmit(event) {
-    // Stop the browser's default "reload the page on form submit" behaviour.
+    // stop the browser's default "reload the page on form submit" behaviour
     event.preventDefault()
 
+    // "50,000" -> 5000000, or null if the input is invalid
     const amountCents = dollarsToCents(amount)
     if (amountCents === null) {
       setError('Enter a positive dollar amount (up to 2 decimal places).')
+      // clear any old success message
       setConfirmation(null)
+      // stop here — don't call the API
       return
     }
 
+    // lock the form
     setSubmitting(true)
+    // clear previous messages
     setError(null)
     setConfirmation(null)
     try {
+      // POST to the API and wait for the response
       const result = await logRevenue(aircraftId, amountCents, memo.trim())
 
-      onLogged(result.summary) // parent replaces its state -> dashboard re-renders
+      // parent replaces its state -> the whole dashboard re-renders
+      onLogged(result.summary)
 
+      // how many owners got a share
       const paid = result.distribution.allocations.length
+      // build the success message (with correct singular/plural "owner(s)")
       setConfirmation(
         `Logged ${formatCents(result.distribution.revenueCents)} — split across ${paid} owner${paid === 1 ? '' : 's'}.`,
       )
+      // reset the inputs for the next entry
       setAmount('')
       setMemo('')
     } catch (err) {
+      // show whatever the API / network reported
       setError(err.message)
     } finally {
+      // unlock the form whether it succeeded or failed
       setSubmitting(false)
     }
   }
@@ -56,16 +73,19 @@ function RevenueForm({ aircraftId, onLogged }) {
     <section className="card">
       <h3>Log Flight Revenue</h3>
 
+      {/* onSubmit fires on button click or Enter in a field */}
       <form onSubmit={handleSubmit} className="revenue-form">
+        {/* Note: JSX does not allow comments between an element's attributes,
+            so these notes sit at the end of each attribute line instead. */}
         <label>
           Amount (USD)
           <input
             type="text"
-            inputMode="decimal"
+            inputMode="decimal" // hints mobile keyboards to show a number pad
             placeholder="50000"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            disabled={submitting}
+            value={amount} // controlled input: React state is the source of truth
+            onChange={(e) => setAmount(e.target.value)} // sync state on every keystroke
+            disabled={submitting} // grey it out mid-request
           />
         </label>
 
@@ -81,11 +101,14 @@ function RevenueForm({ aircraftId, onLogged }) {
         </label>
 
         <button type="submit" disabled={submitting}>
+          {/* button label reflects the submitting state */}
           {submitting ? 'Logging…' : 'Log revenue'}
         </button>
       </form>
 
+      {/* render only when `error` is truthy */}
       {error && <p className="error">{error}</p>}
+      {/* render only when `confirmation` is truthy */}
       {confirmation && <p className="confirmation">{confirmation}</p>}
     </section>
   )

@@ -8,14 +8,18 @@
 
 /** 2500000  ->  "$25,000.00" */
 export function formatCents(cents) {
+  // cents -> dollars, then format with US locale rules
   return (cents / 100).toLocaleString('en-US', {
+    // adds the "$" and groups thousands with commas
     style: 'currency',
+    // forces exactly 2 decimal places
     currency: 'USD',
   });
 }
 
 /** 3750  ->  "37.5%"   (basis points are hundredths of a percent) */
 export function formatBasisPoints(basisPoints) {
+  // 3750 / 100 = 37.5, then append "%"
   return `${basisPoints / 100}%`;
 }
 
@@ -29,11 +33,16 @@ export function formatBasisPoints(basisPoints) {
  * handles integers — same rule as the backend.
  */
 export function dollarsToCents(input) {
+  // strip "$", commas and whitespace
   const cleaned = String(input).replace(/[$,\s]/g, '');
-  if (!/^\d+(\.\d{1,2})?$/.test(cleaned)) return null; // digits, up to 2 decimals
+  // must be digits, optionally a "." followed by 1-2 more digits
+  if (!/^\d+(\.\d{1,2})?$/.test(cleaned)) return null;
 
+  // now safe to turn into a number
   const dollars = Number(cleaned);
+  // reject NaN / Infinity and non-positive amounts
   if (!Number.isFinite(dollars) || dollars <= 0) return null;
 
+  // dollars -> cents; round guards against float wobble (e.g. 1.1 * 100)
   return Math.round(dollars * 100);
 }

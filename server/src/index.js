@@ -7,10 +7,14 @@
  *   POST /api/aircraft/:id/revenue    log revenue and distribute it
  */
 
+// the web framework (routing + middleware)
 import express from 'express';
+// middleware that adds the headers browsers need for cross-origin calls
 import cors from 'cors';
 
+// read path (dashboard payload)
 import { getAircraftSummary } from './aircraft.js';
+// write path (log + distribute revenue)
 import { recordRevenue } from './revenue.js';
 
 // The port the API listens on.
@@ -18,6 +22,7 @@ import { recordRevenue } from './revenue.js';
 // `process.env.PORT` lets a hosting provider override this in production.
 const PORT = process.env.PORT || 3001;
 
+// the application object; routes and middleware attach to it
 const app = express();
 
 /* ------------------------------------------------------------------ *
@@ -30,6 +35,7 @@ const app = express();
 app.use(cors());
 
 // Parse JSON request bodies so route handlers can read `req.body`.
+// turns the raw request body into a JS object on req.body
 app.use(express.json());
 
 /* ------------------------------------------------------------------ *
@@ -42,6 +48,7 @@ app.use(express.json());
  * Try it:  curl http://localhost:3001/api/health
  */
 app.get('/api/health', (req, res) => {
+  // send back a small JSON object
   res.json({ status: 'ok', service: 'fractional-ledger-api' });
 });
 
@@ -52,18 +59,24 @@ app.get('/api/health', (req, res) => {
  * Try it:  curl http://localhost:3001/api/aircraft/1
  */
 app.get('/api/aircraft/:id', (req, res) => {
+  // :id arrives as a string; convert it to a number
   const id = Number(req.params.id);
+  // reject "abc", "1.5", "0", "-3" etc. before touching the database
   if (!Number.isInteger(id) || id <= 0) {
     return res
+      // 400 = Bad Request
       .status(400)
       .json({ error: 'aircraft id must be a positive integer' });
   }
 
+  // ask the data layer for the payload
   const summary = getAircraftSummary(id);
+  // 404 = Not Found
   if (!summary) {
     return res.status(404).json({ error: `no aircraft with id ${id}` });
   }
 
+  // 200 OK + the dashboard payload
   res.json(summary);
 });
 
@@ -83,6 +96,7 @@ app.get('/api/aircraft/:id', (req, res) => {
  *     -d '{"amountCents":5000000,"memo":"NYC-London charter"}'
  */
 app.post('/api/aircraft/:id/revenue', (req, res) => {
+  // same id parsing as the GET route
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) {
     return res
@@ -90,30 +104,40 @@ app.post('/api/aircraft/:id/revenue', (req, res) => {
       .json({ error: 'aircraft id must be a positive integer' });
   }
 
+  // pull the two fields out; default to {} if the body is missing entirely
   const { amountCents, memo } = req.body ?? {};
 
+  // the amount must be whole positive cents — reject decimals, zero, negatives, non-numbers
   if (!Number.isInteger(amountCents) || amountCents <= 0) {
     return res.status(400).json({
       error: 'amountCents must be a positive integer (whole cents)',
     });
   }
+  // memo is optional, but if present it must be text
   if (memo != null && typeof memo !== 'string') {
     return res.status(400).json({ error: 'memo must be a string' });
   }
 
+  // make sure the aircraft exists before we try to record revenue for it
   if (!getAircraftSummary(id)) {
     return res.status(404).json({ error: `no aircraft with id ${id}` });
   }
 
+  // do the work: calculate the split and write it to the ledger
   const { revenueEventId, distribution } = recordRevenue(id, {
     amountCents,
+    // trim whitespace; an empty string becomes null
     memo: memo?.trim() || null,
   });
 
+  // 201 = Created
   res.status(201).json({
+    // id of the new revenue_event row
     revenueEventId,
+    // the calculated split (allocations, distributed/retained)
     distribution,
-    summary: getAircraftSummary(id), // refreshed dashboard state
+    // refreshed dashboard state, so the client can replace its own wholesale
+    summary: getAircraftSummary(id),
   });
 });
 
@@ -123,6 +147,7 @@ app.post('/api/aircraft/:id/revenue', (req, res) => {
 
 // Any request that matched no route above.
 app.use((req, res) => {
+  // catch-all 404 in JSON form
   res.status(404).json({ error: 'not found' });
 });
 
@@ -130,10 +155,13 @@ app.use((req, res) => {
 // would return an HTML error page; we want JSON.
 // eslint-disable-next-line no-unused-vars -- Express needs the 4-arg signature
 app.use((err, req, res, next) => {
+  // the tagged error from revenue.js -> 409 = Conflict (aircraft has no owners)
   if (err.code === 'NO_HOLDINGS') {
     return res.status(409).json({ error: err.message });
   }
+  // log anything unexpected for the developer
   console.error(err);
+  // 500 = generic server failure
   res.status(500).json({ error: 'internal server error' });
 });
 
@@ -141,6 +169,7 @@ app.use((err, req, res, next) => {
  * Start listening
  * ------------------------------------------------------------------ */
 
+// runs once, when the server is ready to accept requests
 app.listen(PORT, () => {
   console.log(`API listening on http://localhost:${PORT}`);
 });

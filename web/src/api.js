@@ -6,25 +6,34 @@
  * host or port to configure here.
  */
 
+// every request path is prefixed with this
 const BASE = '/api';
 
 async function request(path, options) {
+  // e.g. fetch('/api/aircraft/1', { ...options })
   const response = await fetch(BASE + path, {
+    // tell the server we're sending / expecting JSON
     headers: { 'Content-Type': 'application/json' },
+    // merge in method/body from the caller (overrides the header above if given)
     ...options,
   });
 
   // The API always responds with JSON, including on errors ({ error: "..." }).
+  // parse the JSON body; if it isn't JSON, fall back to null instead of throwing
   const body = await response.json().catch(() => null);
 
+  // response.ok is false for any 4xx / 5xx status code
   if (!response.ok) {
+    // prefer the server's error message, else a generic one with the status code
     throw new Error(body?.error || `Request failed (${response.status})`);
   }
+  // success -> hand the parsed object back to the caller
   return body;
 }
 
 /** Fetch the dashboard payload for one aircraft. */
 export function getAircraft(id) {
+  // GET is fetch's default method, so no options object is needed
   return request(`/aircraft/${id}`);
 }
 
@@ -35,6 +44,7 @@ export function getAircraft(id) {
 export function logRevenue(id, amountCents, memo) {
   return request(`/aircraft/${id}/revenue`, {
     method: 'POST',
+    // serialize the payload object to a JSON string for the request body
     body: JSON.stringify({ amountCents, memo }),
   });
 }
