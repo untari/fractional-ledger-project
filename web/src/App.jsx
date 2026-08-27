@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react'
 
 import { getAircraft } from './api.js'
 import AssetCard from './components/AssetCard.jsx'
+import RevenueForm from './components/RevenueForm.jsx'
 import ShareholderTable from './components/ShareholderTable.jsx'
 
 // The prototype manages a single aircraft. Its id in the seeded database is 1.
@@ -48,6 +49,9 @@ function App() {
     <main>
       <h1>Fractional Share &amp; Dividend Ledger</h1>
       <AssetCard aircraft={summary.aircraft} totals={summary.totals} />
+      {/* When the form logs revenue, the API returns the fresh summary; we
+          drop it straight into state and every child re-renders. */}
+      <RevenueForm aircraftId={AIRCRAFT_ID} onLogged={setSummary} />
       <ShareholderTable shareholders={summary.shareholders} />
     </main>
   )

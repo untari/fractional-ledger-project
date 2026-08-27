@@ -105,7 +105,53 @@ table.shareholders tbody tr:last-child td {
   border-bottom: none;
 }
 
+/* --- revenue form ---------------------------------------------------- */
+.revenue-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.revenue-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: #374151;
+}
+
+.revenue-form input {
+  padding: 0.5rem 0.6rem;
+  font-size: 1rem;
+  border: 1px solid #d0d5dd;
+  border-radius: 6px;
+}
+
+.revenue-form button {
+  align-self: flex-start;
+  padding: 0.55rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  background: #1f6feb;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.revenue-form button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 /* --- states ---------------------------------------------------------- */
 .error {
   color: #b42318;
+  margin: 0.75rem 0 0;
+}
+
+.confirmation {
+  color: #067647;
+  margin: 0.75rem 0 0;
 }

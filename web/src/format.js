@@ -18,3 +18,22 @@ export function formatCents(cents) {
 export function formatBasisPoints(basisPoints) {
   return `${basisPoints / 100}%`;
 }
+
+/**
+ * Parse a typed dollar amount into whole cents.
+ *   "50,000"    -> 5000000
+ *   "$1,234.5"  -> 123450
+ *   "" / "abc" / "0" / "-5"  -> null   (caller shows a validation message)
+ *
+ * We convert to cents here, on the way in, so the rest of the app only ever
+ * handles integers — same rule as the backend.
+ */
+export function dollarsToCents(input) {
+  const cleaned = String(input).replace(/[$,\s]/g, '');
+  if (!/^\d+(\.\d{1,2})?$/.test(cleaned)) return null; // digits, up to 2 decimals
+
+  const dollars = Number(cleaned);
+  if (!Number.isFinite(dollars) || dollars <= 0) return null;
+
+  return Math.round(dollars * 100);
+}
