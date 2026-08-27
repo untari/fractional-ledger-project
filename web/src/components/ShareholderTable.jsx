@@ -1,10 +1,12 @@
 /**
- * The list of fractional owners: name, ownership stake, and the total they have
- * been paid so far across every logged flight.
+ * The list of fractional owners: name, ownership stake (with a visual bar), and
+ * the total they have been paid so far across every logged flight.
  */
 
-// "$..." and "..%" formatters
-import { formatCents, formatBasisPoints } from '../format.js';
+// "37.5%" formatter
+import { formatBasisPoints } from '../format.js';
+// currency value that flashes when it goes up
+import AnimatedCents from './AnimatedCents.jsx';
 
 // `shareholders` is the array from summary.shareholders
 function ShareholderTable({ shareholders }) {
@@ -15,20 +17,25 @@ function ShareholderTable({ shareholders }) {
         <thead>
           <tr>
             <th>Investor</th>
-            <th className="num">Ownership</th>
+            <th>Ownership</th>
             <th className="num">Accumulated payout</th>
           </tr>
         </thead>
         <tbody>
-          {/* one <tr> per shareholder */}
+          {/* one <tr> per shareholder; key = stable id for React */}
           {shareholders.map((s) => (
-            // key: stable id so React can track rows efficiently across re-renders
             <tr key={s.investorId}>
-              <td>{s.name}</td>
-              {/* 3750 -> "37.5%" */}
-              <td className="num">{formatBasisPoints(s.basisPoints)}</td>
-              {/* cents -> "$..." */}
-              <td className="num">{formatCents(s.totalPaidCents)}</td>
+              <td className="holder-name">{s.name}</td>
+              <td className="ownership-cell">
+                {formatBasisPoints(s.basisPoints)}
+                {/* bar filled to the ownership percentage */}
+                <div className="ownership-bar">
+                  <span style={{ width: `${s.basisPoints / 100}%` }} />
+                </div>
+              </td>
+              <td className="num">
+                <AnimatedCents value={s.totalPaidCents} />
+              </td>
             </tr>
           ))}
         </tbody>

@@ -31,6 +31,11 @@ async function request(path, options) {
   return body;
 }
 
+/** Fetch the list of all aircraft (id, tailNumber, model, ...). */
+export function listAircraft() {
+  return request('/aircraft');
+}
+
 /** Fetch the dashboard payload for one aircraft. */
 export function getAircraft(id) {
   // GET is fetch's default method, so no options object is needed

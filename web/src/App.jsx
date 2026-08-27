@@ -1,40 +1,50 @@
 /**
  * The root component.
  *
- * When the page opens it loads the aircraft dashboard from the API, holds it in
- * state, and renders the asset card + shareholder table + revenue form.
+ * On load it fetches the fleet and selects the first aircraft, then fetches that
+ * aircraft's dashboard. Changing the picker re-fetches for the new selection.
+ * Logging revenue drops the server's fresh summary straight into state.
  */
 
 // useState: component memory; useEffect: run code after render
 import { useEffect, useState } from 'react'
 
-import { getAircraft } from './api.js'
+import { getAircraft, listAircraft } from './api.js'
+import AircraftPicker from './components/AircraftPicker.jsx'
 import AssetCard from './components/AssetCard.jsx'
 import RevenueForm from './components/RevenueForm.jsx'
 import ShareholderTable from './components/ShareholderTable.jsx'
 
-// The prototype manages a single aircraft. Its id in the seeded database is 1.
-const AIRCRAFT_ID = 1
-
 function App() {
-  // `summary` is the API payload: { aircraft, shareholders, totals }.
-  // It's null until the fetch finishes.
-  // [current value, setter that triggers a re-render]
+  // the list of all aircraft, for the picker
+  const [fleet, setFleet] = useState([])
+  // which aircraft is selected (its id), or null until the fleet loads
+  const [selectedId, setSelectedId] = useState(null)
+  // dashboard payload for the selected aircraft: { aircraft, shareholders, totals }
   const [summary, setSummary] = useState(null)
-  // holds an error message string, or null
+  // an error message string, or null
   const [error, setError] = useState(null)
 
-  // The empty dependency array [] means "run this once, after the first render".
+  // 1. Load the fleet once, then select the first aircraft.
   useEffect(() => {
-    // call the API
-    getAircraft(AIRCRAFT_ID)
-      // success -> store the payload in state
-      .then(setSummary)
-      // failure -> store the message
+    listAircraft()
+      .then((data) => {
+        setFleet(data.aircraft)
+        setSelectedId(data.aircraft[0]?.id ?? null)
+      })
       .catch((err) => setError(err.message))
   }, [])
 
-  // early return: render the error screen and nothing else
+  // 2. Whenever the selection changes, (re)load that aircraft's dashboard.
+  //    [selectedId] means "run this again every time selectedId changes".
+  useEffect(() => {
+    if (selectedId == null) return
+    setSummary(null) // show the loading state while the new one arrives
+    getAircraft(selectedId)
+      .then(setSummary)
+      .catch((err) => setError(err.message))
+  }, [selectedId])
+
   if (error) {
     return (
       <main>
@@ -43,26 +53,34 @@ function App() {
     )
   }
 
-  // still loading: summary hasn't arrived yet
-  if (!summary) {
-    return (
-      <main>
-        <p>Loading…</p>
-      </main>
-    )
-  }
-
-  // summary is loaded -> render the real dashboard
   return (
     <main>
-      <h1>Fractional Share &amp; Dividend Ledger</h1>
-      {/* pass slices of state down as props */}
-      <AssetCard aircraft={summary.aircraft} totals={summary.totals} />
-      {/* When the form logs revenue, the API returns the fresh summary; we
-          drop it straight into state and every child re-renders.
-          onLogged(newSummary) is literally setSummary(newSummary). */}
-      <RevenueForm aircraftId={AIRCRAFT_ID} onLogged={setSummary} />
-      <ShareholderTable shareholders={summary.shareholders} />
+      <header className="page-header">
+        <h1>
+          Fractional Share &amp; <span className="accent">Dividend Ledger</span>
+        </h1>
+        <p>Charter revenue, distributed to fractional owners by stake.</p>
+      </header>
+
+      {/* only worth showing the picker when there's more than one choice */}
+      {fleet.length > 1 && (
+        <AircraftPicker
+          aircraft={fleet}
+          selectedId={selectedId}
+          onSelect={setSelectedId}
+        />
+      )}
+
+      {!summary ? (
+        <p className="loading">Loading…</p>
+      ) : (
+        <>
+          <AssetCard aircraft={summary.aircraft} totals={summary.totals} />
+          {/* onLogged(newSummary) is literally setSummary(newSummary) */}
+          <RevenueForm aircraftId={selectedId} onLogged={setSummary} />
+          <ShareholderTable shareholders={summary.shareholders} />
+        </>
+      )}
     </main>
   )
 }

@@ -10,28 +10,27 @@ import { formatCents } from '../format.js';
 function AssetCard({ aircraft, totals }) {
   return (
     <section className="card">
-      <h2 className="asset-name">
-        {/* e.g. "Bombardier Global 7500" */}
-        {aircraft.manufacturer} {aircraft.model}
-      </h2>
-      <p className="asset-tail">Tail #{aircraft.tailNumber}</p>
+      <div className="asset-head">
+        <h2 className="asset-name">
+          {/* e.g. "Bombardier Global 7500" */}
+          {aircraft.manufacturer} {aircraft.model}
+        </h2>
+        <span className="asset-tail">TAIL #{aircraft.tailNumber}</span>
+      </div>
 
-      {/* description list: three label/value pairs */}
+      {/* description list: three label/value tiles */}
       <dl className="stat-row">
         <div className="stat">
           <dt>Revenue logged</dt>
-          {/* total revenue ever logged */}
           <dd>{formatCents(totals.revenueLoggedCents)}</dd>
         </div>
-        <div className="stat">
+        <div className="stat stat-accent">
           <dt>Distributed to owners</dt>
-          {/* total ever paid out */}
           <dd>{formatCents(totals.distributedCents)}</dd>
         </div>
         <div className="stat">
-          <dt>Ownership allocated</dt>
-          {/* already a plain number, e.g. 100 */}
-          <dd>{totals.ownedPercent}%</dd>
+          <dt>Flights logged</dt>
+          <dd>{totals.revenueEventCount}</dd>
         </div>
       </dl>
     </section>
